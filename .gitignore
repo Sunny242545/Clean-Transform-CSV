@@ -418,4 +418,4 @@ FodyWeavers.xsd
 *.msp
 
 #virtual environment folders
-virtual/
+myenv/
