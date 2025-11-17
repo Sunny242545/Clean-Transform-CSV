@@ -19,8 +19,10 @@ class CSVTransformer:
         else:
             self.data = self.data.replace({"ERROR": pd.NA, "UNKNOWN": pd.NA, "nan": pd.NA, "NaN": pd.NA, "": pd.NA})
         self.missfill()
+        self.changetype()
+        self.dropduplicates()
 
-    def columntypes(self):
+    def uniqueness(self):
         print(self.data.dtypes)
         for col in self.data:
             print(f'column : {col}')
@@ -50,6 +52,15 @@ class CSVTransformer:
             'Location':"In-store",
             'Transaction Date':pd.Timestamp('9999-09-09')
         })
+    
+    def dropduplicates(self):
+        if self.data is None:
+            print("Data Empty")
+        else:
+            print("Dropping Duplicates if any")
+            print(self.data[self.data.duplicated()])
+            self.data = self.data.drop_duplicates()
+        # return self.data[self.data.duplicated()]
 
     def load(self):
         if self.data is None:
@@ -60,11 +71,9 @@ class CSVTransformer:
 file = CSVTransformer('dirty_data.csv')
 file.read()
 file.transform()
-file.columntypes()
-file.changetype()
 file.load()
 print("*******************************************************************************")
 file2 = CSVTransformer('cleaned_data.csv')
 file2.read()
 file2.changetype()
-file2.columntypes()
+file2.uniqueness()
