@@ -1,11 +1,27 @@
 import pandas as pd # type: ignore
 import numpy as np  # type: ignore
 import os
+import yaml #type: ignore
+
+
+# -----------------------------
+# Config reader function
+# -----------------------------
+
+def load_config(path = "config.yml"):
+        with open(path, "r") as f:
+            return yaml.safe_load(f)
+        
+            
+# -----------------------------
+# CSV Transformer class
+# -----------------------------
 
 class CSVTransformer:
-    def __init__(self, path = None):
+    def __init__(self, config_file = "config.yml"):
+        self.props = load_config(config_file) #load the config file to props variable
         self.data = None
-        self.path = path
+        self.path = self.props["input_file"] #get the input file path from config(input_path)
 
     def read(self):
         if self.path is None or not os.path.exists(self.path):
@@ -17,19 +33,21 @@ class CSVTransformer:
         if self.data is None:
             print( "Data Empty ")
         else:
-            self.data = self.data.replace({"ERROR": pd.NA, "UNKNOWN": pd.NA, "nan": pd.NA, "NaN": pd.NA, "": pd.NA})
+            replacements = {val: pd.NA for val in self.props["invalid_replacements"]}
+            self.data = self.data.replace(replacements)
+            # self.data = self.data.replace({"ERROR": pd.NA, "UNKNOWN": pd.NA, "nan": pd.NA, "NaN": pd.NA, "": pd.NA})
         self.missfill()
         self.changetype()
         self.dropduplicates()
 
     def uniqueness(self):
-        print(self.data.dtypes)
+        # print(self.data.dtypes)
         for col in self.data:
             print(f'column : {col}')
             print(self.data[col].unique())
 
     def changetype(self):
-        col = 'Transaction Date'
+        col = self.props["date_column"]
         if col in self.data.columns:
             print(f'Changing type of column: {col} along with other numeric columns')
             for c in self.data.columns:
@@ -43,15 +61,8 @@ class CSVTransformer:
         # print(self.data['Transaction Date'].head())
 
     def missfill(self):
-        self.data = self.data.fillna({
-            'Item':"Miscellaneous",
-            'Quantity':0.0,
-            'Price Per Unit':0.0,
-            'Total Spent':0.0,
-            'Payment Method':"Cash",
-            'Location':"In-store",
-            'Transaction Date':pd.Timestamp('9999-09-09')
-        })
+        fill_rules = self.props["missing_values"]
+        self.data = self.data.fillna(fill_rules)
     
     def dropduplicates(self):
         if self.data is None:
@@ -63,17 +74,13 @@ class CSVTransformer:
         # return self.data[self.data.duplicated()]
 
     def load(self):
+        output_file = self.props.get("output_file")
         if self.data is None:
             print( "Data Empty ")
         else:
-            return  self.data.to_csv('cleaned_data.csv', index=False)
+            return  self.data.to_csv(output_file, index=False)
 
-file = CSVTransformer('dirty_data.csv')
+file = CSVTransformer("config.yml")
 file.read()
 file.transform()
 file.load()
-print("*******************************************************************************")
-file2 = CSVTransformer('cleaned_data.csv')
-file2.read()
-file2.changetype()
-file2.uniqueness()
