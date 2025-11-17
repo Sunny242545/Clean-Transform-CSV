@@ -1,0 +1,20 @@
+input_file: "dirty_data.csv"
+output_file: "cleaned_data.csv"
+
+missing_values:
+  Item: "Miscellaneous"
+  Quantity: 0.0
+  Price Per Unit: 0.0
+  Total Spent: 0.0
+  Payment Method: "Cash"
+  Location: "In-store"
+  Transaction Date: "9999-09-09"
+
+invalid_replacements:
+  - "ERROR"
+  - "UNKNOWN"
+  - "NaN"
+  - "nan"
+  - ""
+
+date_column: "Transaction Date"
