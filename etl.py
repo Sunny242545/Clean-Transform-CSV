@@ -19,6 +19,7 @@ def load_config(path = "config.yml"):
 
 class CSVTransformer:
     def __init__(self, config_file = "config.yml"):
+        print("Loading the config properties....")
         self.props = load_config(config_file) #load the config file to props variable
         self.data = None
         self.path = self.props["input_file"] #get the input file path from config(input_path)
@@ -27,15 +28,16 @@ class CSVTransformer:
         if self.path is None or not os.path.exists(self.path):
             raise FileNotFoundError("File not Found")
         else:
+            print("Reading the input file data....")
             self.data = pd.read_csv(self.path)
                       
     def transform(self):
         if self.data is None:
             print( "Data Empty ")
         else:
+            print("replacing the Invalid values in the data....")
             replacements = {val: pd.NA for val in self.props["invalid_replacements"]}
             self.data = self.data.replace(replacements)
-            # self.data = self.data.replace({"ERROR": pd.NA, "UNKNOWN": pd.NA, "nan": pd.NA, "NaN": pd.NA, "": pd.NA})
         self.missfill()
         self.changetype()
         self.dropduplicates()
@@ -48,19 +50,16 @@ class CSVTransformer:
 
     def changetype(self):
         col = self.props["date_column"]
-        if col in self.data.columns:
-            print(f'Changing type of column: {col} along with other numeric columns')
-            for c in self.data.columns:
-                if c != col:
-                    self.data[c] = self.data[c].apply(pd.to_numeric, errors = 'ignore')
-                else:
-                    self.data[c] = pd.to_datetime(self.data[c], errors='coerce')
-        else:
-            print(f'Column {col} not found in data')
-        # print(self.data['Transaction Date'].dtype)
-        # print(self.data['Transaction Date'].head())
+        print(f'Changing type of columns....')
+        for c in self.data.columns:
+            if c != col:
+                self.data[c] = self.data[c].apply(pd.to_numeric, errors = 'ignore')
+            else:
+                self.data[c] = pd.to_datetime(self.data[c], errors='coerce')
+
 
     def missfill(self):
+        print("Filling the missing values....")
         fill_rules = self.props["missing_values"]
         self.data = self.data.fillna(fill_rules)
     
@@ -78,6 +77,7 @@ class CSVTransformer:
         if self.data is None:
             print( "Data Empty ")
         else:
+            print("Loading the cleaned data into output file....")
             return  self.data.to_csv(output_file, index=False)
 
 file = CSVTransformer("config.yml")
